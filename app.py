@@ -7,15 +7,22 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 
 # --- 1. CONFIGURATION & API SETUP ---
-load_dotenv()
-# Hybrid secret management: Local (.env) or Cloud (Streamlit Secrets)
-api_key = st.secrets.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY")
+load_dotenv() 
+
+# This is the "Bulletproof" logic:
+# It looks for the key in Streamlit Secrets (Cloud) first,
+# and falls back to your local .env file (Local) if not found.
+try:
+    api_key = st.secrets["GOOGLE_API_KEY"]
+except (FileNotFoundError, KeyError):
+    api_key = os.getenv("GOOGLE_API_KEY")
 
 if not api_key:
-    st.error("API Key not found! Please check your .env file or Streamlit Secrets.")
+    st.error("API Key not found! Ensure it is in your .env file or Streamlit Cloud Secrets.")
     st.stop()
 
 genai.configure(api_key=api_key)
+# ... rest of your code .
 model = genai.GenerativeModel("gemini-2.5-flash-lite")
 
 # --- 2. AI ADVICE FUNCTION (INTEGRATED) ---
